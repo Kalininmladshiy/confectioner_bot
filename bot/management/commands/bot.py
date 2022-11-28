@@ -7,6 +7,7 @@ from telegram.ext import (
     CommandHandler,
     ConversationHandler,
     Updater,
+    PreCheckoutQueryHandler,
 )
 
 from bot.bot_handlers import (
@@ -14,7 +15,7 @@ from bot.bot_handlers import (
     QUIT_MENU, CAKE, CUSTOM_CAKE, REGISTER, PAY, AGREEMENT,
     ONE, TWO, THREE, FOUR, FIVE, SIX, SEVEN, EIGHT, NINE, TEN,
     start, start_over, end,
-    cakes, custom_cakes, add_cake_to_order, register, pay, order, agreement
+    cakes, custom_cakes, add_cake_to_order, register, pay, order, agreement, precheckout_callback
 )
 
 
@@ -24,8 +25,10 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         load_dotenv()
         tg_token = os.getenv("TG_BOT_TOKEN")
+        payments_token = os.getenv('PAYMENTS_TOKEN')
         updater = Updater(tg_token)
         dispatcher = updater.dispatcher
+        dispatcher.bot_data.update({'payments_token': payments_token})        
         conv_handler = ConversationHandler(
             entry_points=[CommandHandler('start', start)],
             states={
@@ -73,5 +76,6 @@ class Command(BaseCommand):
             fallbacks=[CommandHandler('start', start)],
         )
         dispatcher.add_handler(conv_handler)
+        dispatcher.add_handler(PreCheckoutQueryHandler(precheckout_callback))
         updater.start_polling()
         updater.idle()

@@ -1,4 +1,4 @@
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update, LabeledPrice
 from telegram.ext import CallbackContext, ConversationHandler
 
 from bot.models import Cake, Order, OrderedCake
@@ -260,22 +260,24 @@ def register(update: Update, context: CallbackContext) -> int:
 
 
 def pay(update: Update, context: CallbackContext) -> int:
-    """Show new choice of buttons"""
     query = update.callback_query
     query.answer()
-    keyboard = [
-        [
-            InlineKeyboardButton("Вернуться в главное меню", callback_data=str(MAIN_MENU)),
-        ],
-        [
-            InlineKeyboardButton("Выйти", callback_data=str(QUIT_MENU)),
-        ]
-    ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    query.edit_message_text(
-        text="Раздел в разработке, вернитесь в главное меню.", reply_markup=reply_markup
+    bot = query.bot
+    order = context.chat_data['order']
+    bucket_text, bucket_total = get_bucket_text(order)
+    price = LabeledPrice(label='оплата заказа', amount=int(bucket_total)*100)
+    message_text = 'Тестовый платеж!'
+    update.effective_chat.send_message(message_text)
+    update.effective_chat.send_invoice(
+        title='Оплата заказа',
+        description='Оплата заказа',
+        provider_token=context.bot_data['payments_token'],
+        currency='rub',
+        is_flexible=False,
+        prices=[price],
+        start_parameter='order_payment',
+        payload='test-invoice-payload'
     )
-    return PAY
 
 
 def done(update: Update, context: CallbackContext) -> int:
@@ -301,3 +303,8 @@ def end(update: Update, context: CallbackContext) -> int:
     query.answer()
     query.edit_message_text(text="До встречи!")
     return ConversationHandler.END
+
+
+def precheckout_callback(update: Update, context: CallbackContext):
+    query = update.pre_checkout_query
+    query.answer(ok=True)
