@@ -280,24 +280,13 @@ def pay(update: Update, context: CallbackContext) -> int:
     )
 
 
-def done(update: Update, context: CallbackContext) -> int:
-    """Returns `ConversationHandler.END`, which tells the
-    ConversationHandler that the conversation is over.
-    """
-    order = context.chat_data['order']
-    order = {}
-    query = update.callback_query
-    query.answer()
-    query.edit_message_text(text="Спасибо за заказ!")
-    return ConversationHandler.END
-
-
 def end(update: Update, context: CallbackContext) -> int:
     """Returns `ConversationHandler.END`, which tells the
     ConversationHandler that the conversation is over.
     """
     order = context.chat_data['order']
-    delete_order(order)
+    if order['id']:
+        delete_order(order)
     order = {}
     query = update.callback_query
     query.answer()
