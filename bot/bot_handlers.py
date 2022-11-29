@@ -285,7 +285,7 @@ def end(update: Update, context: CallbackContext) -> int:
     ConversationHandler that the conversation is over.
     """
     order = context.chat_data['order']
-    if order['id']:
+    if 'id' in order.keys():
         delete_order(order)
     order = {}
     query = update.callback_query
